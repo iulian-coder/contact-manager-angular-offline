@@ -1,0 +1,8 @@
+.custom-file-upload input[type="file"] {
+    display: none;
+}
+
+.invalid-feedback {
+    color: red !important;
+
+}

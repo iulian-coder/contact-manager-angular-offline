@@ -1,0 +1,33 @@
+<div class="container">
+    <ng-container *ngIf="groupedData && (groupedData | keyvalue).length > 0; else noContacts">
+        <div *ngFor="let item of groupedData | keyvalue" class="list-group">
+            <h6>{{ item.key }}</h6>
+            <div *ngFor="let contact of item.value"
+                class="border-bottom list-group-item d-flex align-items-center border-0 py-3"
+                (click)="viewContact(contact.id)">
+                <div *ngIf="contact.profile_picture; else placeholder">
+                    <img [src]="contact.profile_picture" class="rounded-circle me-3" [alt]="contact.name" width="50"
+                        height="50">
+                </div>
+
+                <ng-template #placeholder>
+                    <div class="placeholderPicture rounded-circle d-flex justify-content-center align-items-center me-3"
+                        [title]="contact.name" [style.width.px]="50" [style.height.px]="50">
+                        {{ getContactInitials(contact.name) }}
+                    </div>
+                </ng-template>
+
+                <div class="flex-grow-1">
+                    <h5 class="mb-0">{{ contact.name }}</h5>
+                    <small class="text-muted">{{ contact.phone | phoneDisplay }}</small>
+                </div>
+            </div>
+        </div>
+    </ng-container>
+
+    <ng-template #noContacts>
+        <div class="d-flex justify-content-center align-items-center vh-100">
+            No contacts available.
+        </div>
+    </ng-template>
+</div>
