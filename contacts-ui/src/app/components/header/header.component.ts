@@ -17,7 +17,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isOnDetailPage: boolean = false;
   isOnHomePage: boolean = false;
 
-  currentContactId!: number | null;
+  currentContactId: number | null = null;
   isEditMode: boolean = false;
 
   constructor(
@@ -27,11 +27,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.checkBackendStatus();
-    setInterval(() => { this.checkBackendStatus(); }, 10000); // 10 seconds
+    this.initBackendStatusCheck();
+    this.initRouterEventListeners();
+    this.initContactServiceSubscriptions();
+  }
 
-    this.router.events.pipe(filter(event => event instanceof NavigationEnd)
-    ).subscribe(() => {
+  private initContactServiceSubscriptions() {
+    this.contactService.editMode$.pipe(takeWhile(() => this.alive))
+      .subscribe(editMode => this.isEditMode = editMode);
+
+    this.contactService.currentContactId$.pipe(takeWhile(() => this.alive))
+      .subscribe(id => this.currentContactId = id);
+  }
+
+  private initRouterEventListeners() {
+    this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(() => {
       this.changeStatusEditMode(false);
       const currentUrl = this.router.url;
 
@@ -39,14 +49,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.isOnDetailPage = currentUrl.startsWith('/contact/') && !currentUrl.endsWith('/new');
       this.isNewRecord = currentUrl.endsWith('/new');
     });
+  }
 
-    this.contactService.editMode$.pipe(takeWhile(() => this.alive)).subscribe((editMode) => {
-      this.isEditMode = editMode;
-    });
-
-    this.contactService.currentContactId$.pipe(takeWhile(() => this.alive)).subscribe(id => {
-      this.currentContactId = id;
-    })
+  private initBackendStatusCheck() {
+    this.updateBackendStatus();
+    setInterval(() => { this.updateBackendStatus(); }, 10000); // 10 seconds
+    window.addEventListener('online', this.updateBackendStatus.bind(this));
+    window.addEventListener('offline', this.updateBackendStatus.bind(this));
   }
 
   changeStatusEditMode(status: boolean): void {
@@ -73,27 +82,29 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   getIdFromRoute(): number | null {
     const idString = this.route.snapshot.paramMap.get('id');
-    const id = idString ? parseInt(idString) : null;
-    return id;
+    return idString ? parseInt(idString) : null;
   }
 
-  checkOnlineStatus():boolean{
+  checkOnlineStatus(): boolean {
     return this.contactService.checkOnlineStatus();
   }
 
-  checkBackendStatus(): void {
-    this.contactService.checkBackendStatus().subscribe({
-      next: (response) => {
-        this.isBackendUp = true;
-      },
-      error: (error) => {
-        this.isBackendUp = false;
-      }
-    });
+  updateBackendStatus(): void {
+    if (!this.checkOnlineStatus()) {
+      this.isBackendUp = false;
+    } else {
+      this.contactService.checkBackendStatus().subscribe({
+        next: () => this.isBackendUp = true,
+        error: () => this.isBackendUp = false
+      });
+    }
   }
 
   ngOnDestroy(): void {
     this.alive = false;
+
+    window.removeEventListener('online', this.updateBackendStatus.bind(this));
+    window.removeEventListener('offline', this.updateBackendStatus.bind(this));
   }
 
 }

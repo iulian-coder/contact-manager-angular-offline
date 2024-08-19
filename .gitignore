@@ -147,3 +147,4 @@ tmp/
 .settings/
 *.sublime-workspace
 *.sublime-project
+contacts-server/package-lock.json
