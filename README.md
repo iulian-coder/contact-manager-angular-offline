@@ -1,8 +1,7 @@
 # Angular Contact Manager - Offline SPA
 
-## Overview
-
 This project is a Single Page Application (SPA) built using Angular, designed to manage contacts through mobile devices. It supports offline functionality, allowing users to create, edit, and delete contacts even when there is no network connectivity. Once the application regains connectivity, all changes are synchronized with the backend.
+
 
 ## Features
 
